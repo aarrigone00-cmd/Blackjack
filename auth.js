@@ -15,7 +15,7 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Crxs_HTR20u9jKciIq3r8Q_9tYMfi0J
   const signOutBtn = $("signout");
 
   const tabs = document.querySelectorAll(".tab");
-  const panels = { table: $("table"), profile: $("profile") };
+  const panels = { table: $("table"), stats: $("stats"), profile: $("profile") };
 
   const pf = {
     loading: $("profile-loading"),
@@ -46,6 +46,9 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Crxs_HTR20u9jKciIq3r8Q_9tYMfi0J
   }
 
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  // Shared with tracker.js and stats.js. They listen for "bj:user" and "bj:tab" events.
+  window.BJ = { client, user: null };
+  const emit = (name, detail) => document.dispatchEvent(new CustomEvent(name, { detail }));
 
   // ---------- Helpers ----------
 
@@ -85,6 +88,7 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Crxs_HTR20u9jKciIq3r8Q_9tYMfi0J
   function showTab(name) {
     tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
     Object.entries(panels).forEach(([key, el]) => (el.hidden = key !== name));
+    emit("bj:tab", { tab: name });
   }
   tabs.forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
 
@@ -233,6 +237,10 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Crxs_HTR20u9jKciIq3r8Q_9tYMfi0J
   function render(session) {
     const user = session?.user ?? null;
     if (!user) {
+      if (currentUser) {
+        window.BJ.user = null;
+        emit("bj:user", { user: null });
+      }
       currentUser = null;
       profile = null;
       loadedFor = null;
@@ -246,6 +254,8 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Crxs_HTR20u9jKciIq3r8Q_9tYMfi0J
     loginEl.hidden = true;
     appEl.hidden = false;
     if (isNewUser) {
+      window.BJ.user = user;
+      emit("bj:user", { user });
       profile = null;
       showTab("table");
       renderHeader();
@@ -253,9 +263,14 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Crxs_HTR20u9jKciIq3r8Q_9tYMfi0J
     }
   }
 
-  // Defer the profile fetch out of the auth callback (recommended by supabase-js).
-  client.auth.onAuthStateChange((_event, session) => setTimeout(() => render(session), 0));
-  client.auth.getSession().then(({ data }) => render(data.session));
+  // Wait until every script on the page (tracker, stats) has loaded and is listening,
+  // and keep the profile fetch out of the auth callback (recommended by supabase-js).
+  const pageReady = new Promise((resolve) =>
+    document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", resolve, { once: true }) : resolve()
+  );
+  const renderWhenReady = (session) => pageReady.then(() => setTimeout(() => render(session), 0));
+  client.auth.onAuthStateChange((_event, session) => renderWhenReady(session));
+  client.auth.getSession().then(({ data }) => renderWhenReady(data.session));
 
   signInBtn.addEventListener("click", async () => {
     loginError.textContent = "";

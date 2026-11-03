@@ -25,6 +25,22 @@ Setup checklist:
 
 Signed-in players get a **Profile** tab where they create and edit a profile (username, display name, bio, photo). First-time players land on that tab automatically. Profiles live in the Supabase `public.profiles` table; row-level security lets each user read and write only their own row. The schema is in `supabase/migrations/`.
 
+## Hand tracking & stats
+
+Every hand is saved to Supabase when it settles, along with every hit/stand/double decision. Each decision records the situation (your total, soft/hard, dealer upcard) and what basic strategy recommends, so play can be graded and modeled. Players can tag hands with a named strategy from the picker on the Table tab, and the bankroll carries over between visits.
+
+The **Stats** tab shows KPIs (net, win rate, return on wagers, basic-strategy match rate, busts, streaks…), auto-generated insights, net-over-time and win-rate-by-upcard charts, breakdowns by starting hand and strategy, recent hands, and CSV export of hands and decisions.
+
+| Table / view | Contents |
+| --- | --- |
+| `strategies` | Named strategies per player |
+| `hands` | One row per hand: cards, bets, totals, outcome, net, bankroll before/after, strategy |
+| `hand_actions` | One row per decision: state, action, basic-strategy recommendation, card drawn |
+| `decision_log` (view) | Decisions joined with hand results and strategy name, ready for modeling |
+| `record_hand()` (function) | Saves a hand and its decisions in one transaction |
+
+All of it is private to each player via row-level security. Schema: `supabase/migrations/`.
+
 ## Run locally
 
 No build step. Serve the folder with any static server, e.g.:

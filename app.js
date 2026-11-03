@@ -15,6 +15,7 @@ const state = {
   dealer: [],
   inRound: false,
   dealerHidden: true,
+  log: null, // details of the hand in progress, saved when it settles
   busy: false,
 };
 
@@ -75,7 +76,8 @@ function cardValue(card) {
   return Number(card.value);
 }
 
-function handScore(cards) {
+// Returns the best total and whether an ace is still being counted as 11 (soft hand).
+function handInfo(cards) {
   let total = 0;
   let aces = 0;
   for (const c of cards) {
@@ -86,8 +88,10 @@ function handScore(cards) {
     total -= 10;
     aces--;
   }
-  return total;
+  return { total, soft: aces > 0 };
 }
+
+const handScore = (cards) => handInfo(cards).total;
 
 const isBlackjack = (cards) => cards.length === 2 && handScore(cards) === 21;
 
@@ -165,8 +169,10 @@ async function deal() {
     say("Shuffling…");
     await reshuffle();
   }
+  const cardsRemaining = state.remaining;
   const cards = await draw(4);
 
+  state.log = { bankBefore: state.bank, bet: state.bet, cardsRemaining, actions: [] };
   state.bank -= state.bet;
   state.lastBet = state.bet;
   state.player = [cards[0], cards[2]];
@@ -178,19 +184,51 @@ async function deal() {
   if (isBlackjack(state.player) || isBlackjack(state.dealer)) settle();
 }
 
+// Snapshot of the situation when the player makes a decision, graded against basic strategy.
+function decision(action) {
+  const { total, soft } = handInfo(state.player);
+  const up = cardValue(state.dealer[0]);
+  const recommended = BasicStrategy.recommend(total, soft, up, state.player.length === 2);
+  return {
+    seq: state.log.actions.length + 1,
+    action,
+    player_total: total,
+    player_soft: soft,
+    card_count: state.player.length,
+    dealer_upcard_value: up,
+    recommended_action: recommended,
+    matches_basic: action === recommended,
+  };
+}
+
+function logDraw(entry, card) {
+  entry.card_drawn = card.code;
+  entry.total_after = handScore(state.player);
+  state.log.actions.push(entry);
+}
+
 async function hit() {
+  const entry = decision("hit");
   const [card] = await draw(1);
   state.player.push(card);
+  logDraw(entry, card);
   const score = handScore(state.player);
   if (score > 21) settle();
   else if (score === 21) await dealerTurn();
 }
 
+async function stand() {
+  state.log.actions.push(decision("stand"));
+  await dealerTurn();
+}
+
 async function doubleDown() {
+  const entry = decision("double");
+  const [card] = await draw(1);
   state.bank -= state.bet;
   state.bet *= 2;
-  const [card] = await draw(1);
   state.player.push(card);
+  logDraw(entry, card);
   if (handScore(state.player) > 21) settle();
   else await dealerTurn();
 }
@@ -241,6 +279,8 @@ function settle() {
     msg = `Push at ${p}.`;
   }
 
+  saveHand({ playerBJ, dealerBJ, p, d, finalBet: bet });
+
   state.inRound = false;
   // Keep the same bet for the next hand if affordable.
   state.bet = state.lastBet <= state.bank ? state.lastBet : 0;
@@ -248,6 +288,56 @@ function settle() {
   else msg += " Place a bet and deal again.";
   say(msg);
 }
+
+function saveHand({ playerBJ, dealerBJ, p, d, finalBet }) {
+  const log = state.log;
+  if (!log || !window.Tracker) return;
+  state.log = null;
+  const net = state.bank - log.bankBefore;
+  const start = handInfo(state.player.slice(0, 2));
+  const [c1, c2] = state.player;
+  const outcome = playerBJ && !dealerBJ ? "blackjack" : net > 0 ? "win" : net === 0 ? "push" : "loss";
+  Tracker.recordHand(
+    {
+      deck_id: state.deckId,
+      deck_count: DECK_COUNT,
+      cards_remaining: log.cardsRemaining,
+      bank_before: log.bankBefore,
+      bet: log.bet,
+      final_bet: finalBet,
+      doubled: finalBet > log.bet,
+      player_cards: state.player.map((c) => c.code),
+      dealer_cards: state.dealer.map((c) => c.code),
+      dealer_upcard: state.dealer[0].code,
+      dealer_upcard_value: cardValue(state.dealer[0]),
+      player_start_total: start.total,
+      player_start_soft: start.soft,
+      player_start_pair: cardValue(c1) === cardValue(c2),
+      player_final_total: p,
+      dealer_final_total: d,
+      player_blackjack: playerBJ,
+      dealer_blackjack: dealerBJ,
+      player_bust: p > 21,
+      dealer_bust: d > 21,
+      outcome,
+      net,
+      bank_after: state.bank,
+      decisions: log.actions.length,
+      basic_strategy_deviations: log.actions.filter((a) => !a.matches_basic).length,
+    },
+    log.actions
+  );
+}
+
+// Lets the tracker restore the bankroll from the player's last saved hand.
+window.Game = {
+  restoreBank(amount) {
+    if (state.inRound || state.busy || !Number.isFinite(amount)) return;
+    state.bank = amount;
+    if (state.bet > state.bank) state.bet = 0;
+    render();
+  },
+};
 
 // ---------- Events ----------
 
@@ -269,7 +359,7 @@ els.deal.addEventListener("click", () => {
   if (state.bet > 0 && state.bet <= state.bank) run(deal);
 });
 els.hit.addEventListener("click", () => run(hit));
-els.stand.addEventListener("click", () => run(dealerTurn));
+els.stand.addEventListener("click", () => run(stand));
 els.double.addEventListener("click", () => run(doubleDown));
 
 els.reset.addEventListener("click", () => {

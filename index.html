@@ -26,10 +26,21 @@
 
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" id="tab-table" data-tab="table" aria-selected="true" aria-controls="table">Table</button>
+      <button class="tab" role="tab" id="tab-stats" data-tab="stats" aria-selected="false" aria-controls="stats">Stats</button>
       <button class="tab" role="tab" id="tab-profile" data-tab="profile" aria-selected="false" aria-controls="profile">Profile</button>
     </nav>
 
   <main class="table" id="table" role="tabpanel" aria-labelledby="tab-table">
+    <div class="strategy-bar">
+      <label for="strategy-select">Strategy</label>
+      <select id="strategy-select"><option value="">No strategy</option></select>
+      <form id="strategy-new" class="strategy-new" hidden>
+        <input id="strategy-name" maxlength="60" placeholder="e.g. Always double 11" aria-label="New strategy name" />
+        <button type="submit" class="primary small">Add</button>
+        <button type="button" id="strategy-cancel" class="secondary small">Cancel</button>
+      </form>
+      <span class="save-status hint" id="save-status" role="status" aria-live="polite"></span>
+    </div>
     <header class="top">
       <h1>Blackjack</h1>
       <div class="stats">
@@ -67,6 +78,72 @@
       <button id="reset" class="link" hidden>Out of money — start over</button>
     </section>
   </main>
+
+  <section class="stats-page" id="stats" role="tabpanel" aria-labelledby="tab-stats" hidden>
+    <div class="filters">
+      <label>Strategy
+        <select id="stats-strategy"></select>
+      </label>
+      <label>Period
+        <select id="stats-range">
+          <option value="all">All time</option>
+          <option value="30">Last 30 days</option>
+          <option value="7">Last 7 days</option>
+          <option value="1">Last 24 hours</option>
+        </select>
+      </label>
+      <div class="export">
+        <button type="button" class="secondary small" id="export-hands">Hands CSV</button>
+        <button type="button" class="secondary small" id="export-decisions">Decisions CSV</button>
+      </div>
+    </div>
+    <p class="hint" id="stats-status" role="status" aria-live="polite">Loading your stats…</p>
+    <div id="stats-body" hidden>
+      <div class="kpis" id="kpis"></div>
+
+      <section class="card">
+        <h3>Insights</h3>
+        <ul class="insights" id="insights"></ul>
+      </section>
+
+      <section class="card">
+        <h3>Net result over time</h3>
+        <p class="hint">Running total of chips won or lost, hand by hand.</p>
+        <div class="chart" id="net-chart"></div>
+      </section>
+
+      <section class="card">
+        <h3>Win rate by dealer upcard</h3>
+        <p class="hint">Share of hands you won (including Blackjacks) against each dealer face-up card.</p>
+        <div class="chart" id="upcard-chart"></div>
+        <div class="table-wrap"><table class="data" id="upcard-table"></table></div>
+      </section>
+
+      <section class="card">
+        <h3>Decision quality</h3>
+        <p class="hint">Each hit, stand and double is graded against basic strategy for this table (dealer stands on 17, no splits).</p>
+        <div class="table-wrap"><table class="data" id="adherence-table"></table></div>
+        <h4>Most common deviations</h4>
+        <div class="table-wrap"><table class="data" id="deviation-table"></table></div>
+      </section>
+
+      <section class="card">
+        <h3>By starting hand</h3>
+        <div class="table-wrap"><table class="data" id="start-table"></table></div>
+      </section>
+
+      <section class="card">
+        <h3>Strategy comparison</h3>
+        <div class="table-wrap"><table class="data" id="strategy-table"></table></div>
+      </section>
+
+      <section class="card">
+        <h3>Recent hands</h3>
+        <div class="table-wrap"><table class="data" id="recent-table"></table></div>
+      </section>
+    </div>
+    <div class="chart-tip" id="chart-tip" role="tooltip" hidden></div>
+  </section>
 
   <section class="profile" id="profile" role="tabpanel" aria-labelledby="tab-profile" hidden>
     <p class="profile-loading" id="profile-loading">Loading your profile…</p>
@@ -112,6 +189,9 @@
   <footer>Cards from <a href="https://deckofcardsapi.com/" target="_blank" rel="noopener">deckofcardsapi.com</a></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
   <script src="auth.js"></script>
+  <script src="strategy.js"></script>
+  <script src="tracker.js"></script>
   <script src="app.js"></script>
+  <script src="stats.js"></script>
 </body>
 </html>
