@@ -21,6 +21,10 @@ Setup checklist:
 - **Supabase → Authentication → Sign In / Providers → Google:** enabled, with the Google client ID and secret.
 - **Supabase → Authentication → URL Configuration:** Site URL `https://<your-site>.netlify.app`, and add it (plus `http://localhost:8000/` for local testing) to Redirect URLs.
 
+## Player profiles
+
+Signed-in players get a **Profile** tab where they create and edit a profile (username, display name, bio, photo). First-time players land on that tab automatically. Profiles live in the Supabase `public.profiles` table; row-level security lets each user read and write only their own row. The schema is in `supabase/migrations/`.
+
 ## Run locally
 
 No build step. Serve the folder with any static server, e.g.:

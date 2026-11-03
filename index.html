@@ -17,12 +17,19 @@
     <p class="message error" id="login-error" role="alert"></p>
   </section>
 
-  <main class="table" id="table" hidden>
+  <div class="app" id="app" hidden>
     <div class="user-bar">
       <img id="user-avatar" class="avatar" alt="" referrerpolicy="no-referrer" hidden />
       <span class="greeting" id="greeting"></span>
       <button id="signout" class="secondary small">Sign out</button>
     </div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-table" data-tab="table" aria-selected="true" aria-controls="table">Table</button>
+      <button class="tab" role="tab" id="tab-profile" data-tab="profile" aria-selected="false" aria-controls="profile">Profile</button>
+    </nav>
+
+  <main class="table" id="table" role="tabpanel" aria-labelledby="tab-table">
     <header class="top">
       <h1>Blackjack</h1>
       <div class="stats">
@@ -60,6 +67,47 @@
       <button id="reset" class="link" hidden>Out of money — start over</button>
     </section>
   </main>
+
+  <section class="profile" id="profile" role="tabpanel" aria-labelledby="tab-profile" hidden>
+    <p class="profile-loading" id="profile-loading">Loading your profile…</p>
+    <form id="profile-form" class="profile-card" novalidate hidden>
+      <h2 id="profile-heading">Create your profile</h2>
+      <p class="hint" id="profile-intro">Pick a username and tell the table a little about yourself.</p>
+
+      <div class="profile-photo">
+        <img id="profile-preview" class="avatar large" alt="Profile photo preview" referrerpolicy="no-referrer" />
+        <label class="field grow">
+          <span>Photo URL</span>
+          <input id="pf-avatar" type="url" maxlength="1000" placeholder="https://…" />
+          <small class="hint">Defaults to your Google photo. Leave blank for none.</small>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Username</span>
+        <input id="pf-username" required minlength="3" maxlength="20" autocomplete="username"
+               autocapitalize="none" spellcheck="false" placeholder="ace_of_spades" />
+        <small class="hint">3–20 characters: lowercase letters, numbers, underscores.</small>
+      </label>
+
+      <label class="field">
+        <span>Display name</span>
+        <input id="pf-display" required maxlength="50" autocomplete="name" />
+      </label>
+
+      <label class="field">
+        <span>Bio <small class="hint" id="pf-bio-count">0/280</small></span>
+        <textarea id="pf-bio" rows="3" maxlength="280" placeholder="Hit on 16? Always."></textarea>
+      </label>
+
+      <p class="message" id="profile-message" role="status" aria-live="polite"></p>
+      <div class="profile-actions">
+        <button type="submit" class="primary" id="profile-save">Create profile</button>
+      </div>
+      <p class="hint member-since" id="member-since"></p>
+    </form>
+  </section>
+  </div>
 
   <footer>Cards from <a href="https://deckofcardsapi.com/" target="_blank" rel="noopener">deckofcardsapi.com</a></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
