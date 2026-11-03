@@ -12,6 +12,15 @@ A browser Blackjack game built with plain HTML, CSS and JavaScript, using the fr
 
 Rules: dealer stands on all 17s, Blackjack pays 3:2, double down on your first two cards, $1000 starting bankroll.
 
+## Google sign-in (Supabase)
+
+Players sign in with Google through Supabase Auth before they can play. Once signed in, the table greets them by first name and shows their Google profile picture. `auth.js` holds the Supabase project URL and publishable key (both are meant to be public).
+
+Setup checklist:
+- **Google Cloud → OAuth client:** Authorized JavaScript origin `https://<your-site>.netlify.app`; Authorized redirect URI `https://bkjajikcdsldpkulxxyx.supabase.co/auth/v1/callback`.
+- **Supabase → Authentication → Sign In / Providers → Google:** enabled, with the Google client ID and secret.
+- **Supabase → Authentication → URL Configuration:** Site URL `https://<your-site>.netlify.app`, and add it (plus `http://localhost:8000/` for local testing) to Redirect URLs.
+
 ## Run locally
 
 No build step. Serve the folder with any static server, e.g.:

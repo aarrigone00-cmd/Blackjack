@@ -120,3 +120,44 @@ footer a { color: var(--gold); }
   .cards img { width: 64px; }
   .cards { min-height: 96px; }
 }
+
+/* ---------- Login & greeting ---------- */
+
+.login {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  text-align: center;
+}
+.login h1 { font-size: 2.5rem; }
+.login p { margin: 0; color: var(--muted); }
+
+.google-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  background: #fff;
+  color: #222;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  object-fit: cover;
+}
+.greeting { flex: 1; font-weight: 600; overflow-wrap: anywhere; }
+.small { padding: 6px 12px; font-size: 0.9rem; }
