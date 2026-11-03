@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blackjack</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="table">
+    <header class="top">
+      <h1>Blackjack</h1>
+      <div class="stats">
+        <span>Bank: <strong id="bank">$1000</strong></span>
+        <span>Bet: <strong id="bet">$0</strong></span>
+        <span>Cards left: <strong id="remaining">–</strong></span>
+      </div>
+    </header>
+
+    <section class="hand">
+      <h2>Dealer <span class="score" id="dealer-score"></span></h2>
+      <div class="cards" id="dealer-cards"></div>
+    </section>
+
+    <p class="message" id="message" role="status" aria-live="polite">Loading deck…</p>
+
+    <section class="hand">
+      <h2>You <span class="score" id="player-score"></span></h2>
+      <div class="cards" id="player-cards"></div>
+    </section>
+
+    <section class="controls">
+      <div class="betting" id="betting">
+        <button class="chip" data-chip="10">+10</button>
+        <button class="chip" data-chip="25">+25</button>
+        <button class="chip" data-chip="100">+100</button>
+        <button id="clear-bet" class="secondary">Clear</button>
+        <button id="deal" class="primary">Deal</button>
+      </div>
+      <div class="actions" id="actions" hidden>
+        <button id="hit" class="primary">Hit</button>
+        <button id="stand" class="primary">Stand</button>
+        <button id="double" class="secondary">Double</button>
+      </div>
+      <button id="reset" class="link" hidden>Out of money — start over</button>
+    </section>
+  </main>
+
+  <footer>Cards from <a href="https://deckofcardsapi.com/" target="_blank" rel="noopener">deckofcardsapi.com</a></footer>
+  <script src="app.js"></script>
+</body>
+</html>
